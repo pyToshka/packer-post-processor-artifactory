@@ -1,0 +1,12 @@
+.idea/libraries/Go_SDK.xml
+.idea/modules.xml
+.idea/packer-post-processor-epam-webdav.iml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/libraries/GOPATH__packer_post_processor_epam_webdav_.xml
+/packer-post-processor-epam-webdav
+/test___1
+/packer-post-processor-artifactory
+/packer_virtualbox-iso_virtualbox.box
+/ubuntu-16.04.2-server-arm64.iso
+/packer_cache/
