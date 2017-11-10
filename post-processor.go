@@ -173,6 +173,10 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         }
         ui.Message(buffer.String())
 
+        if(resp.StatusCode != 201) {
+            return errors.New("Error uploading File")
+        }
+        
         return err
     }
 
