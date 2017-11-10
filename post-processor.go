@@ -110,8 +110,8 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         }
         ui.Message(fmt.Sprintf("Checksum is %s", checksum))
 
-        //upload the box to webdav
-        err = p.uploadBox(box, boxPath, ui)
+        //upload the box to artifactory
+        err = p.uploadBox(box, boxPath, ui, checksum)
 
         if err != nil {
             return nil, false, err
@@ -122,7 +122,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
 
 
-    func (p *PostProcessor) uploadBox(box, boxPath string, ui packer.Ui) error {
+    func (p *PostProcessor) uploadBox(box, boxPath string, ui packer.Ui, checkSum string) error {
         // open the file for reading
         file, err := os.Open(box)
         if err != nil {
@@ -152,6 +152,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         defer file.Close()
         resp, err := http.NewRequest("PUT", importRepo, file)
         resp.Header.Set("X-JFrog-Art-Api", AuthKey)
+        resp.Header.Set("X-Checksum-Sha256", checkSum)
         if err != nil {
             log.Fatal(err)
         }
