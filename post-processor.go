@@ -15,6 +15,7 @@ import (
     "github.com/hashicorp/packer/template/interpolate"
     "strings"
     "path"
+    "bytes"
 )
 
 
