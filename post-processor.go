@@ -165,9 +165,11 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
         scanner := bufio.NewScanner(res.Body)
         scanner.Split(bufio.ScanBytes)
+        var buffer bytes.Buffer
         for scanner.Scan() {
-            ui.Message(scanner.Text())
+            buffer.WriteString(scanner.Text())
         }
+        ui.Message(buffer.String())
 
         return err
     }
