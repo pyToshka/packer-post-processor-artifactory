@@ -161,6 +161,11 @@ func (p *PostProcessor) uploadBox(box, boxPath string) error {
 		log.Fatal(err)
 	}
 	defer res.Body.Close()
+
+    body, err := ioutil.ReadAll(res.Body)
+
+    ui.Message(body)
+
 	return err
 }
 
