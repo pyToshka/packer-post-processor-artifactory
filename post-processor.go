@@ -7,6 +7,7 @@ import (
     "os"
     "crypto/sha256"
     "io"
+    "bufio"
     "encoding/hex"
     "github.com/hashicorp/packer/common"
     "github.com/hashicorp/packer/helper/config"
@@ -109,7 +110,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         ui.Message(fmt.Sprintf("Checksum is %s", checksum))
 
         //upload the box to webdav
-        err = p.uploadBox(box, boxPath)
+        err = p.uploadBox(box, boxPath, ui)
 
         if err != nil {
             return nil, false, err
@@ -120,7 +121,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
 
 
-    func (p *PostProcessor) uploadBox(box, boxPath string) error {
+    func (p *PostProcessor) uploadBox(box, boxPath string, ui packer.Ui) error {
         // open the file for reading
         file, err := os.Open(box)
         if err != nil {
@@ -162,9 +163,11 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         }
         defer res.Body.Close()
 
-        body, err := ioutil.ReadAll(res.Body)
-
-        ui.Message(body)
+        scanner := bufio.NewScanner(res.Body)
+        scanner.Split(bufio.ScanBytes)
+        for scanner.Scan() {
+            ui.Message(scanner.Text())
+        }
 
         return err
     }
