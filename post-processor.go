@@ -96,6 +96,7 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	// determine version
 	version := p.config.Version
 
+    ui.Message(fmt.Sprintf("Box to upload: %s (%d bytes) Version: %s", box, boxStat.Size(), version))
 
 	// generate the path
 	boxPath := fmt.Sprintf("%s/%s/%s", p.config.BoxDir, version, path.Base(box))
@@ -140,6 +141,9 @@ func (p *PostProcessor) uploadBox(box, boxPath string) error {
 	}else{
 		importRepo=fmt.Sprintf(importRepo+"/"+repo+ "/%s",box)
 	}
+
+    ui.Message(importRepo)
+
 	if err != nil {
 		log.Fatal(err)
 	}
