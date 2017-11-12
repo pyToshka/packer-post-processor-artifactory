@@ -14,7 +14,6 @@ import (
     "github.com/hashicorp/packer/packer"
     "github.com/hashicorp/packer/template/interpolate"
     "strings"
-    "path"
     "bytes"
     "errors"
 )
@@ -118,7 +117,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
 
 
-    func (p *PostProcessor) uploadBox(box, ui packer.Ui, checkSum string) error {
+    func (p *PostProcessor) uploadBox(box string, ui packer.Ui, checkSum string) error {
         // open the file for reading
         file, err := os.Open(box)
         if err != nil {
