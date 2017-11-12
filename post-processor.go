@@ -19,11 +19,10 @@ import (
     "errors"
 )
 
-
-
 type Config struct {
     BoxName             string `mapstructure:"box_name"`
     BoxDir              string `mapstructure:"box_dir"`
+    BoxProvider         string `mapstructure:"box_provider"`
     Version             string `mapstructure:"version"`
     BlobURL             string `mapstructure:"url"`
     Repo                string `mapstructure:"repo"`
@@ -139,9 +138,8 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
         if importRepo == "" {
             importRepo = fmt.Sprintf("http://localhost:8080/'%s'/'%s'", repo, box)
-
         }else{
-            importRepo=fmt.Sprintf(importRepo+"/"+repo+ "/%s",box)
+            importRepo=fmt.Sprintf(importRepo + "/" + repo + "/%s" +";box_name=%s;box_provider=%s;box_version=%s", box, p.config.BoxName, p.config.BoxProvider, p.config.Version)
         }
 
         ui.Message(importRepo)
