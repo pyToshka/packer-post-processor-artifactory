@@ -100,7 +100,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         ui.Message(fmt.Sprintf("Box to upload: %s (%d bytes) Version: %s", box, boxStat.Size(), version))
 
         // generate the path
-        boxPath := fmt.Sprintf("%s/%s/%s", p.config.BoxDir, version, path.Base(box))
+        boxPath := fmt.Sprintf("%s/%s/%s-%s-%s.box", p.config.BoxDir, version, p.config.BoxName, p.config.BoxProvider, p.config.Version)
 
         ui.Message("Generating checksum")
         checksum, err := sum256(box)
