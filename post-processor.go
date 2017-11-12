@@ -99,9 +99,6 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
         ui.Message(fmt.Sprintf("Box to upload: %s (%d bytes) Version: %s", box, boxStat.Size(), version))
 
-        // generate the path
-        boxPath := fmt.Sprintf("%s/%s/%s-%s-%s.box", p.config.BoxDir, version, p.config.BoxName, p.config.BoxProvider, p.config.Version)
-
         ui.Message("Generating checksum")
         checksum, err := sum256(box)
         if err != nil {
@@ -110,7 +107,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         ui.Message(fmt.Sprintf("Checksum is %s", checksum))
 
         //upload the box to artifactory
-        err = p.uploadBox(box, boxPath, ui, checksum)
+        err = p.uploadBox(box, ui, checksum)
 
         if err != nil {
             return nil, false, err
@@ -121,7 +118,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
 
 
-    func (p *PostProcessor) uploadBox(box, boxPath string, ui packer.Ui, checkSum string) error {
+    func (p *PostProcessor) uploadBox(box, ui packer.Ui, checkSum string) error {
         // open the file for reading
         file, err := os.Open(box)
         if err != nil {
@@ -139,7 +136,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         if importRepo == "" {
             importRepo = fmt.Sprintf("http://localhost:8080/'%s'/'%s'", repo, box)
         }else{
-            importRepo=fmt.Sprintf(importRepo + "/" + repo + "/%s" +";box_name=%s;box_provider=%s;box_version=%s", box, p.config.BoxName, p.config.BoxProvider, p.config.Version)
+            importRepo=fmt.Sprintf("%s/%s/%s/%s-%s-%s.box" +";box_name=%s;box_provider=%s;box_version=%s", importReo, repo, p.config.BoxName, p.config.BoxName, p.config.BoxProvider, p.config.Version, p.config.BoxName, p.config.BoxProvider, p.config.Version)
         }
 
         ui.Message(importRepo)
