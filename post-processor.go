@@ -94,7 +94,6 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         if err != nil {
             return nil, false, err
         }
-        ui.Message(fmt.Sprintf("Box to upload: %s (%d bytes)", box, boxStat.Size()))
 
         // determine version
         version := p.config.Version
