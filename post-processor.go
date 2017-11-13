@@ -135,7 +135,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         if importRepo == "" {
             importRepo = fmt.Sprintf("http://localhost:8080/'%s'/'%s'", repo, box)
         }else{
-            importRepo=fmt.Sprintf("%s/%s/%s/%s-%s-%s.box" +";box_name=%s;box_provider=%s;box_version=%s", importRepo, repo, p.config.BoxName, p.config.BoxName, p.config.BoxProvider, p.config.Version, p.config.BoxName, p.config.BoxProvider, p.config.Version)
+            importRepo=fmt.Sprintf("%s/%s/%s/%s-%s-%s.box" +";box_name=%s/%s;box_provider=%s;box_version=%s", importRepo, repo, p.config.BoxDir, p.config.BoxName, p.config.BoxProvider, p.config.Version, p.config.BoxDir, p.config.BoxName, p.config.BoxProvider, p.config.Version)
         }
 
         ui.Message(importRepo)
@@ -170,12 +170,8 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
         if(res.StatusCode != 201) {
             return errors.New("Error uploading File")
         }
-        
         return err
     }
-
-
-
 
     // calculates a sha256 checksum of the file
     func sum256(filePath string) (string, error) {
