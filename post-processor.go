@@ -206,7 +206,7 @@ func CalculateBasicHashes(rd io.Reader) HashInfo {
 	// creates a multiplexer Writer object that will duplicate all write
 	// operations when copying data from source into all different hashing algorithms
 	// at the same time
-	multiWriter := io.MultiWriter(md5, sha1, sha256, sha512)
+	multiWriter := io.MultiWriter(hMd5, hSha1, hSha256, hSha512)
 
 	// Using a buffered reader, this will write to the writer multiplexer
 	// so we only traverse through the file once, and can calculate all hashes
