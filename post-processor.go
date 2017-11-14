@@ -18,6 +18,7 @@ import (
 	"strings"
 	"bytes"
 	"errors"
+	"crypto/sha512"
 )
 
 type Config struct {
@@ -100,16 +101,22 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	ui.Message(fmt.Sprintf("Box to upload: %s (%d bytes) Version: %s", box, boxStat.Size(), version))
 
 	ui.Message("Generating checksums")
-	cksum1, cksum256, cksum5, err := cksum(box)
+
+
+	f, err := os.OpenFile(box, os.O_RDONLY, 0)
 	if err != nil {
-		return nil, false, err
+		log.Fatalln("Cannot open file: %s", box)
 	}
-	ui.Message(fmt.Sprintf("SHA1 is %s", cksum1))
-	ui.Message(fmt.Sprintf("SHA256 is %s", cksum256))
-	ui.Message(fmt.Sprintf("MD5 is %s", cksum5))
+	defer f.Close()
+	info := CalculateBasicHashes(f)
+
+	ui.Message(fmt.Sprintf("md5    :", info.Md5))
+	ui.Message(fmt.Sprintf("sha1   :", info.Sha1))
+	ui.Message(fmt.Sprintf("sha256 :", info.Sha256))
+	ui.Message(fmt.Sprintf("sha512 :", info.Sha512))
 
 	//upload the box to artifactory
-	err = p.uploadBox(box, ui, cksum1, cksum256, cksum5)
+	err = p.uploadBox(box, ui, info)
 
 	if err != nil {
 		return nil, false, err
@@ -117,7 +124,7 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	return nil, true, nil
 }
 
-func (p *PostProcessor) uploadBox(box string, ui packer.Ui, sum1 string, sum256 string, sum5 string) error {
+func (p *PostProcessor) uploadBox(box string, ui packer.Ui, hashInfo HashInfo) error {
 	// open the file for reading
 	file, err := os.Open(box)
 	if err != nil {
@@ -146,9 +153,9 @@ func (p *PostProcessor) uploadBox(box string, ui packer.Ui, sum1 string, sum256 
 	defer file.Close()
 	resp, err := http.NewRequest("PUT", importRepo, file)
 	resp.Header.Set("X-JFrog-Art-Api", AuthKey)
-	resp.Header.Set("X-Checksum-Sha1", sum1)
-	resp.Header.Set("X-Checksum-Sha256", sum256)
-	resp.Header.Set("X-Checksum-Md5", sum5)
+	resp.Header.Set("X-Checksum-Sha1", hashInfo.Sha1)
+	resp.Header.Set("X-Checksum-Sha256", hashInfo.Sha256)
+	resp.Header.Set("X-Checksum-Md5", hashInfo.Md5)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -175,30 +182,49 @@ func (p *PostProcessor) uploadBox(box string, ui packer.Ui, sum1 string, sum256 
 	return err
 }
 
-// calculates a sha256 checksum of the file
-func cksum(filePath string) (string, string, string, error) {
-	// open the file for reading
-	file, err := os.Open(filePath)
+type HashInfo struct {
+	Md5    string `json:"md5"`
+	Sha1   string `json:"sha1"`
+	Sha256 string `json:"sha256"`
+	Sha512 string `json:"sha512"`
+}
+
+func CalculateBasicHashes(rd io.Reader) HashInfo {
+
+	hMd5 := md5.New()
+	hSha1 := sha1.New()
+	hSha256 := sha256.New()
+	hSha512 := sha512.New()
+
+	// For optimum speed, Getpagesize returns the underlying system's memory page size.
+	pagesize := os.Getpagesize()
+
+	// wraps the Reader object into a new buffered reader to read the files in chunks
+	// and buffering them for performance.
+	reader := bufio.NewReaderSize(rd, pagesize)
+
+	// creates a multiplexer Writer object that will duplicate all write
+	// operations when copying data from source into all different hashing algorithms
+	// at the same time
+	multiWriter := io.MultiWriter(md5, sha1, sha256, sha512)
+
+	// Using a buffered reader, this will write to the writer multiplexer
+	// so we only traverse through the file once, and can calculate all hashes
+	// in a single byte buffered scan pass.
+	//
+	_, err := io.Copy(multiWriter, reader)
 	if err != nil {
-		return "", "", "", err
+		panic(err.Error())
 	}
-	defer file.Close()
-	h1 := sha1.New()
-	h256 := sha256.New()
-	h5 := md5.New()
-	if _, err := io.Copy(h1, file); err != nil {
-		return "", "", "", err
-	}
-	if _, err := io.Copy(h256, file); err != nil {
-		return "", "", "", err
-	}
-	if _, err := io.Copy(h5, file); err != nil {
-		return "", "", "", err
-	}
-	s1 := hex.EncodeToString(h1.Sum(nil))
-	s256 := hex.EncodeToString(h256.Sum(nil))
-	s5 := hex.EncodeToString(h5.Sum(nil))
-	return s1, s256, s5, nil
+
+	var info HashInfo
+
+	info.Md5 = hex.EncodeToString(hMd5.Sum(nil))
+	info.Sha1 = hex.EncodeToString(hSha1.Sum(nil))
+	info.Sha256 = hex.EncodeToString(hSha256.Sum(nil))
+	info.Sha512 = hex.EncodeToString(hSha512.Sum(nil))
+
+	return info
 }
 
 // converts a packer builder name to the corresponding vagrant provider
