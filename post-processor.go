@@ -87,7 +87,7 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	}
 
 	provider := providerFromBuilderName(artifact.Id())
-	ui.Say(fmt.Sprintf("Preparing to upload box for '%s' provider to Artifactory repositories '%s'/'%s'", provider, p.config.BlobURL, p.config.Repo))
+	ui.Say(fmt.Sprintf("Preparing to upload box for '%s' provider to Artifactory repositories '%s'/'%s'", provider,p.config.BlobURL,p.config.Repo))
 
 	// determine box size
 	boxStat, err := os.Stat(box)
