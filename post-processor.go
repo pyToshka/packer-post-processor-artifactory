@@ -78,7 +78,7 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 }
 
 func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, error) {
-	if artifact.BuilderId() != "mitchellh.post-processor.vagrant" {
+	if artifact.BuilderId() != "mitchellh.virtualbox" {
 		return nil, false, fmt.Errorf("Unknown artifact type, requires box from vagrant post-processor: %s", artifact.BuilderId())
 	}
 	box := artifact.Files()[0]
