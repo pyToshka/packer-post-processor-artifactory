@@ -12,7 +12,7 @@ $ cp $GOPATH/bin/packer-post-processor-artifactory $HOME/.packer.d/plugins
 ```
 or 
 ```
-go get github.com/pyToshka/packer-post-processor-artifactory
+go get github.com/kczauz/packer-post-processor-artifactory
 ```
 
 Usage
