@@ -1,3 +1,5 @@
+//go:generate mapstructure-to-hcl2 -type Config
+
 package main
 
 import (
@@ -11,6 +13,7 @@ import (
 	"io"
 	"bufio"
 	"encoding/hex"
+	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer/common"
 	"github.com/hashicorp/packer/helper/config"
 	"github.com/hashicorp/packer/packer"
@@ -19,6 +22,7 @@ import (
 	"bytes"
 	"errors"
 	"crypto/sha512"
+	"context"
 )
 
 type Config struct {
@@ -37,6 +41,8 @@ type Config struct {
 type PostProcessor struct {
 	config Config
 }
+
+func (p *PostProcessor) ConfigSpec() hcldec.ObjectSpec { return p.config.FlatMapstructure().HCL2Spec() }
 
 func (p *PostProcessor) Configure(raws ...interface{}) error {
 	err := config.Decode(&p.config, &config.DecodeOpts{
@@ -77,13 +83,13 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 	return nil
 }
 
-func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, error) {
+func (p *PostProcessor) PostProcess(ctx context.Context, ui packer.Ui, artifact packer.Artifact) (packer.Artifact, bool, bool, error) {
 	if artifact.BuilderId() != "mitchellh.virtualbox" {
-		return nil, false, fmt.Errorf("Unknown artifact type, requires box from vagrant post-processor: %s", artifact.BuilderId())
+		return nil, false, false, fmt.Errorf("Unknown artifact type, requires box from vagrant post-processor: %s", artifact.BuilderId())
 	}
 	box := artifact.Files()[0]
 	if !strings.HasSuffix(box, ".box") {
-		return nil, false, fmt.Errorf("Unknown files in artifact from vagrant post-processor: %s", artifact.Files())
+		return nil, false, false, fmt.Errorf("Unknown files in artifact from vagrant post-processor: %s", artifact.Files())
 	}
 
 	provider := providerFromBuilderName(artifact.Id())
@@ -92,7 +98,7 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	// determine box size
 	boxStat, err := os.Stat(box)
 	if err != nil {
-		return nil, false, err
+		return nil, false, false, err
 	}
 
 	// determine version
@@ -119,9 +125,9 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	err = p.uploadBox(box, ui, info)
 
 	if err != nil {
-		return nil, false, err
+		return nil, false, false, err
 	}
-	return nil, true, nil
+	return nil, true, true, nil
 }
 
 func (p *PostProcessor) uploadBox(box string, ui packer.Ui, hashInfo HashInfo) error {
